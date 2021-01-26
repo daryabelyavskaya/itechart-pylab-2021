@@ -3,17 +3,17 @@ import json
 import re
 from collections import namedtuple
 
-from url_view import UrlView
+import url_view
 
 URL_DICT = {
     re.compile('/posts/'): {
-        'GET': UrlView.do_GET_json,
-        'POST': UrlView.do_POST
+        'GET': url_view.get_file_data,
+        'POST': url_view.add_post
     },
     re.compile(r'/posts/(.+)/'): {
-        'GET': UrlView.do_GET,
-        'PUT': UrlView.do_PUT,
-        'DELETE': UrlView.do_DELETE
+        'GET': url_view.get_post,
+        'PUT': url_view.update_post,
+        'DELETE': url_view.remove_post
     }
 }
 
