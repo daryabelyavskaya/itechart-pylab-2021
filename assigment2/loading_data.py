@@ -1,6 +1,7 @@
 import json
 import re
 import time
+from datetime import datetime, timedelta
 
 import requests as req
 import uuid1
@@ -79,10 +80,16 @@ def user_page_data(soup):
     }
 
 
+def get_data(days):
+    if days is not None:
+        return datetime.today() - timedelta(days=int(days.split()[0])).strftime('%Y-%m-%d')
+    return ''
+
+
 def post_data(soup):
     return {
         'numberOfVotes': get_text(soup.find('div', class_=ElementsIdConstants.NUMBER_OF_VOTES_TAG_CLASS)),
-        'postDate': get_text(soup.find('a', class_=ElementsIdConstants.POST_DATE_TAG_CLASS)),
+        'postDate': get_data(get_text(soup.find('a', class_=ElementsIdConstants.POST_DATE_TAG_CLASS))),
         'postCategory': get_text(soup.find('span',
                                            class_=ElementsIdConstants.POST_CATEGORY_TAG_CLASS)),
         'numberOfComments': get_text(
