@@ -25,8 +25,6 @@ class ElementsIdConstants:
     NUMBER_OF_COMMENTS_TAG_CLASS = "FHCV02u6Cp2zYL0fhQPsO"
 
 
-
-
 def load_page_data(parser, link, limit):
     posts = []
     parser.driver_get_link(link)
@@ -75,25 +73,30 @@ def get_text(soup_element):
 
 def user_page_data(soup):
     return {
-        'userKarma': get_text(soup.find('span', id=ElementsIdConstants.USER_KARMA_TAG_ID)),
-        'userCakeDay': get_text(soup.find('span', id=ElementsIdConstants.USER_CAKE_DAY_TAG_ID))
+        'userKarma': int(
+            ''.join(map(str, get_text(soup.find('span', id=ElementsIdConstants.USER_KARMA_TAG_ID)).split(',')))),
+        'userCakeDay': datetime.strptime(get_text(soup.find('span', id=ElementsIdConstants.USER_CAKE_DAY_TAG_ID)),'%B %d, %Y')
+            .strftime('%Y-%m-%d')
     }
 
 
 def get_data(days):
     if days is not None:
-        return datetime.today() - timedelta(days=int(days.split()[0])).strftime('%Y-%m-%d')
+        return (datetime.today() - timedelta(days=int(days.split()[0]))).strftime('%Y-%m-%d')
     return ''
 
 
 def post_data(soup):
     return {
-        'numberOfVotes': get_text(soup.find('div', class_=ElementsIdConstants.NUMBER_OF_VOTES_TAG_CLASS)),
+        'numberOfVotes': int(
+            ''.join(map(str, get_text(soup.find('div', class_=ElementsIdConstants.NUMBER_OF_VOTES_TAG_CLASS))
+                        .split('k')[0].split('.')))),
         'postDate': get_data(get_text(soup.find('a', class_=ElementsIdConstants.POST_DATE_TAG_CLASS))),
         'postCategory': get_text(soup.find('span',
                                            class_=ElementsIdConstants.POST_CATEGORY_TAG_CLASS)),
-        'numberOfComments': get_text(
+        'numberOfComments': int(''.join(map(str, get_text(
             soup.find('div').find('span', class_=ElementsIdConstants.NUMBER_OF_COMMENTS_TAG_CLASS))
+                                            .split('k')[0].split('.')))) * 100
     }
 
 

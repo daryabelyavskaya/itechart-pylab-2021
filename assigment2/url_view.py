@@ -2,8 +2,9 @@ import json
 import re
 from collections import namedtuple
 from datetime import datetime
-from db_requests import GET_DATA,GET_POST,DELETE,UPDATE
+
 from connection_create import connect
+from db_requests import GET_DATA, GET_POST, DELETE, UPDATE, INSERT_USER
 
 ResponseStatus = namedtuple("ResponseStatus",
                             ["response", "ContentType", "data"])
@@ -28,7 +29,7 @@ def load_data_to_json(cursor_data):
     if cursor_data is None:
         return {}
     # как-то преобразовать
-    return json.loads(f.read())
+    return json.loads('')
 
 
 def get_file_data(url=None, vars=None):
@@ -45,7 +46,7 @@ def get_file_data(url=None, vars=None):
 def get_post(url=None, vars=None):
     connection = connect()
     cur = get_connection_cursor(connection)
-    cursor_data = cur.execute(GET_POST, {'uniqueId': get_id(url)})
+    cursor_data = cur.execute(GET_POST, {'unique_id': get_id(url)})
     if cursor_data is None:
         return ResponseStatus(404, 'application/json', {})
     post = load_data_to_json(cursor_data)
@@ -57,13 +58,27 @@ def get_post(url=None, vars=None):
 def add_post(url=None, vars=None):
     connection = connect()
     cur = get_connection_cursor(connection)
-    cursor_data = cur.execute(GET_POST, {'uniqueId': get_id(url)})
+    cursor_data = cur.execute(GET_POST, (vars['uniqueId'],))
     cur.close()
     if cursor_data is not None:
         return ResponseStatus(400, 'application/json', {})
-    cur = get_connection_cursor()
-    cur.execute("INSERT vars")
-    cur.commit()
+    cur = get_connection_cursor(connection)
+    user_id = cur.execute("SELECT userId FROM users WHERE username= %s", (vars['username'],))
+    cur.close()
+    if user_id is None:
+        cur = get_connection_cursor(connection)
+        user_id=cur.execute(INSERT_USER,
+                    (vars['username'], vars['userKarma'], datetime.strptime(vars['userCakeDay'], '%Y-%m-%d')))
+        connection.commit()
+        cur.close()
+        print(user_id)
+        print(type(user_id))
+    cur = get_connection_cursor(connection)
+    cur.execute(INSERT_USER, (
+        vars['uniqueId'], vars['postUrl'], vars["postKarma"], vars["commentKarma"],
+        datetime.strptime(vars['postDate'], '%Y-%m-%d'),
+        vars['numberOfComments'], vars['numberOfVotes'], vars['postCategory'], user_id))
+    connection.commit()
     cur.close()
     connection.close()
     return ResponseStatus(201, 'application/json', {"uniqueId": vars['uniqueId']})
@@ -81,15 +96,15 @@ def update_post(url=None, vars=None):
             {
                 "unique_id": get_id(url),
                 "post_url": vars['postUrl'],
-                "username": vars['username'],
-                "userKarma": vars['userKarma'],
-                "userCakeDay": vars['userCakeDay'],
-                "postKarma": vars["postKarma"],
-                "commentKarma": vars["commentKarma"],
-                "postDate": vars["postDate"],
-                "numberOfComments": vars['numberOfComments'],
-                "numberOfVotes": vars['numberOfVotes'],
-                "postCategory": vars['postCategory']
+                "usernames": vars['username'],
+                "user_karma": vars['userKarma'],
+                "user_CakeDay": vars['userCakeDay'],
+                "post_karma": vars["postKarma"],
+                "comment_karma": vars["commentKarma"],
+                "post_date": vars["postDate"],
+                "number_OfComments": vars['numberOfComments'],
+                "number_OfVotes": vars['numberOfVotes'],
+                "post_Category": vars['postCategory']
             })
         cur.commit()
         cur.close()

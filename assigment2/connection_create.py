@@ -7,7 +7,7 @@ def create_table(connection):
     cur = connection.cursor()
     cur.execute(
         "CREATE TABLE posts ("
-        "uniqueId SERIAL PRIMARY KEY,"
+        "uniqueId VARCHAR PRIMARY KEY,"
         "postUrl VARCHAR,"
         "userId SMALLINT,"
         "postKarma INTEGER,"
@@ -22,16 +22,21 @@ def create_table(connection):
         "userId SERIAL PRIMARY KEY,"
         "username VARCHAR,"
         "userKarma INTEGER,"
-        "userCakeDay INTEGER);"
+        "userCakeDay DATE);"
     )
     connection.commit()
     cur.close()
 
 
 def connect():
-    try:
-        connection_params = config()
-        #create_table(connection)
-        return psycopg2.connect(**connection_params)
-    except Exception:
-        print("Connection error")
+    connection_params = config()
+    # connection = psycopg2.connect(**connection_params)
+    # create_table(connection)
+    # cur = connection.cursor()
+    # connection.commit()
+    # cur.close()
+    # connection.close()
+    return psycopg2.connect(**connection_params)
+
+
+# connect()
