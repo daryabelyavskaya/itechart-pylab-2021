@@ -5,14 +5,11 @@ from config import config
 
 def trigger(connection):
     cur = connection.cursor()
-    cur.execute("CREATE OR REPLACE FUNCTION check_number_of_row()\n"
-                "  RETURNS TRIGGER AS\n"
-                "$body$\n"
+    cur.execute("CREATE OR REPLACE FUNCTION check_number_of_row() RETURNS TRIGGER AS $body$\n"
                 "BEGIN\n"
-                "             IF (SELECT count(*) FROM posts) > 1000\n"
-                "             THEN \n"
-                "                 RAISE EXCEPTION 'INSERT statement exceeding maximum number of rows for this table' \n"
-                "             END IF;\n"
+                "    IF (SELECT count(*) FROM posts) > 1000 THEN \n"
+                "       RAISE EXCEPTION 'INSERT statement exceeding maximum number of rows for this table'; \n"
+                "    END IF;\n"
                 "END;\n"
                 "$body$\n"
                 "LANGUAGE plpgsql;\n"

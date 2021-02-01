@@ -5,7 +5,7 @@ UPDATE_POST = """UPDATE posts
             numberOfVotes = %s, postCategory = %s, postAddedDate=%s WHERE uniqueId = %s ;"""
 UPDATE_USER = """UPDATE users
             SET username= %s ,userKarma= %s, userCakeDay= %s WHERE userId = %s"""
-GET_DATA = 'SELECT * FROM posts INNER JOIN users ON posts.userId=users.userId ;'
+GET_DATA = 'SELECT * FROM posts LEFT JOIN users ON posts.userId=users.userId ;'
 GET_POST = 'SELECT uniqueId FROM posts WHERE uniqueId= %s ;'
 DELETE_POST = 'DELETE FROM posts WHERE uniqueId= %s ;'
 DELETE_USER = 'DELETE FROM users WHERE userId= %s ;'

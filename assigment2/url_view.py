@@ -1,4 +1,3 @@
-import json
 import re
 from collections import namedtuple
 
@@ -15,10 +14,24 @@ def get_id(url):
 
 
 def load_data_to_json(cursor_data):
-    print(cursor_data)
     if cursor_data is None:
         return {}
-    return cursor_data
+    data = []
+    for _ in cursor_data:
+        data.append({
+            "uniqueId": _[0],
+            "postUrl": _[1],
+            "username": _[11],
+            "userKarma": _[12],
+            "userCakeDay": _[13],
+            "postKarma": _[3],
+            "commentKarma": _[4],
+            "postDate": _[5].strftime('%Y-%m-%d'),
+            "numberOfComments": _[6],
+            "numberOfVotes": _[7],
+            "postCategory": _[8]
+        })
+    return data
 
 
 def get_data(url=None, args=None):
@@ -47,7 +60,7 @@ def add_post(url=None, args=None):
     check = check_user(connection, args['username'])
     if check is None:
         insert_user(connection, args)
-        user_id = get_user_id(connection, args['uniqueId'])
+    user_id = get_user_id(connection, args['username'])
     insert_post(connection, args, user_id)
     connection.close()
     return ResponseStatus(201, 'application/json', {"uniqueId": args['uniqueId']})
@@ -55,11 +68,10 @@ def add_post(url=None, args=None):
 
 def update_post(url=None, args=None):
     connection = connect()
-    print('AAAAAAAAAAAAAAAAAa')
     cursor_data = get_cursor_post(connection, args['uniqueId'])
     if cursor_data is not None:
         update_posts(connection, args, get_id(url))
-        update_user(connection, args, get_user_id(connection, get_id(url)))
+        update_user(connection, args, get_user_id(connection, args['username']))
         return ResponseStatus(200, 'application/json', {})
     return ResponseStatus(404, 'application/json', {})
 
@@ -67,9 +79,9 @@ def update_post(url=None, args=None):
 def remove_post(url=None, args=None):
     connection = connect()
     cursor_data = get_cursor_post(connection, get_id(url))
-    print(cursor_data)
-    if cursor_data is None:
+    if cursor_data is not None:
         delete_post(connection, get_id(url))
-        delete_user(connection, get_user_id(connection, get_id(url)))
+        print(get_user_id(connection, args['username']))
+        delete_user(connection, get_user_id(connection, args['username']))
         return ResponseStatus(204, 'application/json', {})
     return ResponseStatus(404, 'application/json', {})

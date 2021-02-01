@@ -10,7 +10,8 @@ def get_time():
 
 def get_cursor_post(connection, args):
     cur = get_connection_cursor(connection)
-    cursor_data = cur.execute(GET_POST, (args,))
+    cur.execute(GET_POST, (args,))
+    cursor_data = cur.fetchone()
     cur.close()
     return cursor_data
 
@@ -21,15 +22,19 @@ def get_connection_cursor(connection):
 
 def check_user(connection, username):
     cur = get_connection_cursor(connection)
-    check = cur.execute(GET_USER_ID, (username,))
+    cur.execute(GET_USER_ID, (username,))
+    check = cur.fetchone()
     cur.close()
     return check
 
 
 def get_user_id(connection, args):
     cur = get_connection_cursor(connection)
-    user_id = cur.execute(GET_USER_ID, (args,))
+    cur.execute(GET_USER_ID, (args,))
+    user_id = cur.fetchone()
     cur.close()
+    if user_id is not None:
+        return user_id[0]
     return user_id
 
 
@@ -53,7 +58,8 @@ def insert_post(connection, args, user_id):
 
 def get_db_data(connection):
     cur = get_connection_cursor(connection)
-    cursor_data = cur.execute(GET_DATA)
+    cur.execute(GET_DATA)
+    cursor_data = cur.fetchall()
     cur.close()
     return cursor_data
 
@@ -74,6 +80,7 @@ def delete_user(connection, args):
 
 def update_posts(connection, args, post_id):
     cur = get_connection_cursor(connection)
+
     cur.execute(
         UPDATE_POST, (post_id, args['postUrl'], args["postKarma"],
                       args["commentKarma"], args["postDate"], args['numberOfComments'], args['numberOfVotes'],
