@@ -3,7 +3,15 @@ import json
 import re
 from collections import namedtuple
 
-import url_view
+from config import DBConfig
+from mongoDB import MongoDB
+from postgres import PostgresqlDB
+from url_view import URLView
+
+DATABASE = {'postgresql': PostgresqlDB, 'mongodb': MongoDB}
+
+config = DBConfig()
+url_view = URLView(DATABASE[config.configs()['database']], config.configs())
 
 URL_DICT = {
     re.compile('/posts/'): {
