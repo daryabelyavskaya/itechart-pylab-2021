@@ -31,7 +31,7 @@ def load_page_data(parser, link, limit):
     logger_page.logger_info_message(f'get page link {link}')
     time.sleep(1)
     offset = 0
-    while len(posts) < 3:
+    while len(posts) < 1001:
         elements = parser.find_elements_by_css_selector(ElementsIdConstants.POST_TAG_CSS_SELECTOR)
         users = parser.find_elements_by_css_selector(ElementsIdConstants.USER_TAG_CSS_SELECTOR)
         elements_links = parser.get_links(elements)
@@ -40,7 +40,7 @@ def load_page_data(parser, link, limit):
         logger_page.logger_info_message('find all users and their links')
         usernames = [users_links[i][28:-1] for i in range(len(users_links))]
         for el in range(offset, len(elements_links) - 1):
-            if len(posts) == 3:
+            if len(posts) == 1000:
                 break
             user = users_links[el]
             post_page = req.get(elements_links[el], headers=HEADERS)
