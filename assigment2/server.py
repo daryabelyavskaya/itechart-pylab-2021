@@ -43,7 +43,7 @@ class MyServerHandler(http.server.BaseHTTPRequestHandler):
 
     def perform_requests(self, method, url=None, args=None):
         try:
-            func_name = find_matches(URL_DICT, self.path)[method]
+            func_name = find_matches(URL_DICT, url)[method]
         except KeyError:
             self.send_headers(404, 'application/json')
             return

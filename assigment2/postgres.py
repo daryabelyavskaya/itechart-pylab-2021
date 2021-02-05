@@ -2,7 +2,6 @@ from datetime import datetime
 
 import psycopg2
 
-from abstractDB import AbstractDB
 from db_requests import GET_POST, INSERT_USER, INSERT_POST, GET_USER_ID, UPDATE_USER, UPDATE_POST, \
     DELETE_POST, DELETE_USER, GET_DATA
 
@@ -11,7 +10,7 @@ def get_time():
     return datetime.today().strftime("%Y-%m-%d")
 
 
-class PostgresqlDB(AbstractDB):
+class PostgresqlDB:
     def __init__(self, config):
         self.config = config
 

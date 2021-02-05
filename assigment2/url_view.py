@@ -21,9 +21,9 @@ class URLView:
 
     def get_post(self, url=None, args=None):
         cursor_data = self.database.get_cursor_post(self.get_id(url))
-        if cursor_data is None or len(cursor_data) == 0:
+        if cursor_data is None:
             return ResponseStatus(404, 'application/json', {})
-        return ResponseStatus(200, 'application/json', )
+        return ResponseStatus(200, 'application/json', {})
 
     def add_post(self, url=None, args=None):
         cursor_data = self.database.get_cursor_post(args['uniqueId'])

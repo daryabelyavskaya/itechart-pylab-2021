@@ -1,2 +1,3 @@
 use posts
-db.createCollection("posts", {'capped': true, max: 1000})
+db.createCollection("posts")
+db.posts.createIndex({"uniqueId": 'text'},{unique:true})
