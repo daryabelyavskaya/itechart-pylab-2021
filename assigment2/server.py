@@ -2,26 +2,22 @@ import http.server
 import json
 import re
 from collections import namedtuple
-
+from url_view import URLView
 from config import DBConfig
 from mongoDB import MongoDB
 from postgres import PostgresqlDB
-from url_view import URLView
 
 DATABASE = {'postgresql': PostgresqlDB, 'mongodb': MongoDB}
 
-config = DBConfig()
-url_view = URLView(DATABASE[config.configs()['database']], config.configs())
-
 URL_DICT = {
     re.compile('/posts/'): {
-        'GET': url_view.get_data,
-        'POST': url_view.add_post
+        'GET': 'get_data',
+        'POST': 'add_post'
     },
     re.compile(r'/posts/(.+)/'): {
-        'GET': url_view.get_post,
-        'PUT': url_view.update_post,
-        'DELETE': url_view.remove_post
+        'GET': 'get_post',
+        'PUT': 'update_post',
+        'DELETE': 'remove_post'
     }
 }
 
@@ -47,10 +43,13 @@ class MyServerHandler(http.server.BaseHTTPRequestHandler):
 
     def perform_requests(self, method, url=None, args=None):
         try:
-            func = find_matches(URL_DICT, self.path)[method]
+            func_name = find_matches(URL_DICT, self.path)[method]
         except KeyError:
             self.send_headers(404, 'application/json')
             return
+        config = DBConfig()
+        url_view = URLView(DATABASE[str(config.configs().database)[8:].lower()], config.configs())
+        func = getattr(url_view, func_name)
         response = func(url=url, args=args)
         self.send_headers(response.response, response.ContentType)
         self.wfile.write(json.dumps(response.data).encode())

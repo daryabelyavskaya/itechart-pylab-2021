@@ -1,4 +1,29 @@
+from enum import Enum
+
+import dacite
+from dataclasses import dataclass
 from decouple import config
+
+
+class Backend(Enum):
+    MONGODB = 1
+    POSTGRESQL = 2
+
+
+converters = {
+    int: lambda x: int(x),
+    Backend: lambda x: Backend[x],
+}
+
+
+@dataclass
+class Configuration:
+    port: int
+    host: str
+    database: Backend
+    database_name: str
+    user: str
+    password: str
 
 
 class DBConfig():
@@ -18,4 +43,9 @@ class DBConfig():
             'user': self.user,
             'password': self.password
         }
-        return config_dict
+
+        configs = dacite.from_dict(
+            data_class=Configuration, data=config_dict,
+            config=dacite.Config(type_hooks=converters),
+        )
+        return configs

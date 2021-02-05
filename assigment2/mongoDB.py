@@ -2,28 +2,29 @@ from datetime import datetime
 
 from pymongo import MongoClient
 
+from abstractDB import AbstractDB
+
 
 def get_time():
     return datetime.today().strftime("%Y-%m-%d")
 
 
-class MongoDB:
+class MongoDB(AbstractDB):
+
     def __init__(self, config):
         self.config = config
-
-    def connection(self):
-        client = MongoClient()
-        self.db = client.posts
-        self.db.createCollection("posts", {'capped': True, max: 1000})
+        print(self.config.port)
+        client = MongoClient(self.config.host, self.config.port)
+        self.db = client[self.config.database_name]
 
     def get_cursor_post(self, args):
-        return self.db.posts.find({'uniqueId': args})
+        return self.db.posts.find_one({'uniqueId': args})
 
     def get_db_data(self):
-        return self.db.users.find()
+        return self.db.posts.find()
 
     def insert_post(self, args):
-        self.db.posts.insert({
+        self.db.posts.insert_one({
             "uniqueId": args['uniqueId'],
             "postUrl": args['url'],
             "username": args['username'],
@@ -39,10 +40,10 @@ class MongoDB:
         })
 
     def delete_post(self, args):
-        self.db.remove({'uniqueId': args})
+        self.db.delete_one({'uniqueId': args})
 
     def update_posts(self, connection, args, post_id):
-        self.db.posts({'uniqueId': post_id}, {
+        self.db.posts.update_one({'uniqueId': post_id}, {
             "uniqueId": args['uniqueId'],
             "postUrl": args['url'],
             "username": args['username'],

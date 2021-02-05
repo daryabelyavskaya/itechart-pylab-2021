@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import psycopg2
+
 from abstractDB import AbstractDB
 from db_requests import GET_POST, INSERT_USER, INSERT_POST, GET_USER_ID, UPDATE_USER, UPDATE_POST, \
     DELETE_POST, DELETE_USER, GET_DATA
@@ -15,12 +16,10 @@ class PostgresqlDB(AbstractDB):
         self.config = config
 
     def connect(self):
-        connection_params = self.config
-        connection = psycopg2.connect(host=connection_params['host'],
-                                      database=connection_params['database_name'],
-                                      user=connection_params['user'],
-                                      password=connection_params['password'])
-        return connection
+        return psycopg2.connect(host=self.config.host,
+                                database=self.config.database_name,
+                                user=self.config.user,
+                                password=self.config.password)
 
     @staticmethod
     def load_to_json(cursor_data):

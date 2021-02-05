@@ -21,7 +21,7 @@ class AbstractDB(object):
 
     @abstractmethod
     def delete_post(self, args):
-        self.db.remove({'uniqueId': args})
+        pass
 
     @abstractmethod
     def update_posts(self, connection, args, post_id):

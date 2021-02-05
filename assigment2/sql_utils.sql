@@ -1,3 +1,4 @@
+CREATE DATABASE posts;
 CREATE TABLE posts
 (
     uniqueId         VARCHAR PRIMARY KEY,
