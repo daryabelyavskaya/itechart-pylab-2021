@@ -26,4 +26,7 @@ The assignment consists of a scrapper of reddit posts and a RESTful server. Pyth
 ## File .env
 File .env has the next environment variables 
 HOST,DATABASE, DATABASE_NAME, CLIENT, PASSWORD, PORT.
+<<<<<<< HEAD
 
+=======
+>>>>>>> 03641df53de60beec8b6485104f7f7285798d763
