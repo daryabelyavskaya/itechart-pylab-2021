@@ -20,8 +20,8 @@ The assignment consists of a scrapper of reddit posts and a RESTful server. Pyth
     Run mongo.js to create databases and table use command:
         $mongo < mongo.js
      Change the environment variables DATABASE in file .env to MONGODB and set your username as CLIENT and your password as PASSWORD.
-2. Enter $pythoт3 server.py in your command line to start the server.
-3. Enter $python3 main.py to load Reddit posts data on server.
+4. Enter $python3 server.py in your command line to start the server.
+5. Enter $python3 main.py to load Reddit posts data on server.
 
 ## File .env
 File .env has the next environment variables 
