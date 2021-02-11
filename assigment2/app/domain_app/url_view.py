@@ -6,7 +6,7 @@ ResponseStatus = namedtuple("ResponseStatus",
 
 
 class URLView:
-    def __init__(self, database,config):
+    def __init__(self, database, config):
         self.database = database(config)
 
     @staticmethod
@@ -30,7 +30,11 @@ class URLView:
         if cursor_data is not None:
             return ResponseStatus(400, 'application/json', {})
         self.database.insert_post(args)
-        return ResponseStatus(201, 'application/json', {"uniqueId": args['uniqueId']})
+        return ResponseStatus(
+            201,
+            'application/json',
+            {"uniqueId": args['uniqueId']}
+        )
 
     def update_post(self, url=None, args=None):
         cursor_data = self.database.get_cursor_post(args['uniqueId'])

@@ -1,16 +1,27 @@
 from datetime import datetime
 
 import psycopg2
+from adapters.database.db_base import AbstractDB
 
-from db_requests import GET_POST, INSERT_USER, INSERT_POST, GET_USER_ID, UPDATE_USER, UPDATE_POST, \
-    DELETE_POST, DELETE_USER, GET_DATA
+from .db_requests import (
+    GET_POST,
+    INSERT_USER,
+    INSERT_POST,
+    GET_USER_ID,
+    UPDATE_USER,
+    UPDATE_POST,
+    DELETE_POST,
+    DELETE_USER,
+    GET_DATA
+)
 
 
 def get_time():
     return datetime.today().strftime("%Y-%m-%d")
 
 
-class PostgresqlDB:
+class PostgresqlDB(AbstractDB):
+
     def __init__(self, config):
         self.config = config
 
@@ -83,9 +94,14 @@ class PostgresqlDB:
 
     def insert_user(self, connection, args):
         connection_cursor = self.get_connection_cursor(connection)
-        connection_cursor.execute(INSERT_USER,
-                                  (args['username'], args['userKarma'],
-                                   datetime.strptime(args['userCakeDay'], '%Y-%m-%d')))
+        connection_cursor.execute(
+            INSERT_USER,
+            (
+                args['username'],
+                args['userKarma'],
+                datetime.strptime(args['userCakeDay'], '%Y-%m-%d')
+            )
+        )
         connection.commit()
         connection_cursor.close()
 
@@ -96,17 +112,31 @@ class PostgresqlDB:
             self.insert_user(connection, args)
         user_id = self.get_user_id(connection, args['username'])
         connection_cursor = self.get_connection_cursor(connection)
-        connection_cursor.execute(INSERT_POST, (
-            args['uniqueId'], args['postUrl'], args["postKarma"], args["commentKarma"],
-            datetime.strptime(args['postDate'], '%Y-%m-%d'),
-            args['numberOfComments'], args['numberOfVotes'], args['postCategory'], user_id, get_time()))
+        connection_cursor.execute(
+            INSERT_POST,
+            (
+                args['uniqueId'],
+                args['postUrl'],
+                args["postKarma"],
+                args["commentKarma"],
+                datetime.strptime(args['postDate'], '%Y-%m-%d'),
+                args['numberOfComments'],
+                args['numberOfVotes'],
+                args['postCategory'],
+                user_id,
+                get_time()
+            )
+        )
         connection.commit()
         connection_cursor.close()
         connection.close()
 
     def delete_post(self, args):
         connection = self.connect()
-        self.delete_user(connection, self.get_user_id(connection, args['username']))
+        self.delete_user(
+            connection,
+            self.get_user_id(connection, args['username'])
+        )
         connection_cursor = self.get_connection_cursor(connection)
         connection_cursor.execute(DELETE_POST, (args,))
         connection.commit()
@@ -123,9 +153,18 @@ class PostgresqlDB:
         connection = self.connect()
         connection_cursor = self.get_connection_cursor(connection)
         connection_cursor.execute(
-            UPDATE_POST, (post_id, args['postUrl'], args["postKarma"],
-                          args["commentKarma"], args["postDate"], args['numberOfComments'], args['numberOfVotes'],
-                          args['postCategory'], get_time(), post_id))
+            UPDATE_POST, (
+                post_id,
+                args['postUrl'],
+                args["postKarma"],
+                args["commentKarma"],
+                args["postDate"],
+                args['numberOfComments'],
+                args['numberOfVotes'],
+                args['postCategory'],
+                get_time(),
+                post_id)
+        )
         connection.commit()
         connection_cursor.close()
         connection.close()
@@ -133,6 +172,11 @@ class PostgresqlDB:
     def update_user(self, connection, args, post_id):
         connection_cursor = self.get_connection_cursor(connection)
         connection_cursor.execute(
-            UPDATE_USER, (args['username'], args['userKarma'], args['userCakeDay'], post_id))
+            UPDATE_USER,
+            (args['username'],
+             args['userKarma'],
+             args['userCakeDay'],
+             post_id)
+        )
         connection.commit()
         connection_cursor.close()

@@ -1,10 +1,10 @@
-class AbstractDB(object):
-    @abstractmethod
-     def __init__(self,config):
-        pass
+from abc import abstractmethod, ABC
+
+
+class AbstractDB(ABC):
 
     @abstractmethod
-    def connection(self):
+    def connect(self):
         pass
 
     @abstractmethod

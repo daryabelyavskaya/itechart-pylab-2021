@@ -2,10 +2,11 @@ import http.server
 import json
 import re
 from collections import namedtuple
-from url_view import URLView
+
+from adapters.database.mongo_db.mongoDB import MongoDB
+from adapters.database.postgres_db.postgres import PostgresqlDB
 from config import DBConfig
-from mongoDB import MongoDB
-from postgres import PostgresqlDB
+from domain_app.url_view import URLView
 
 DATABASE = {'postgresql': PostgresqlDB, 'mongodb': MongoDB}
 
@@ -48,7 +49,10 @@ class MyServerHandler(http.server.BaseHTTPRequestHandler):
             self.send_headers(404, 'application/json')
             return
         config = DBConfig()
-        url_view = URLView(DATABASE[str(config.configs().database)[8:].lower()], config.configs())
+        url_view = URLView(
+            DATABASE[str(config.configs().database)[8:].lower()],
+            config.configs()
+        )
         func = getattr(url_view, func_name)
         response = func(url=url, args=args)
         self.send_headers(response.response, response.ContentType)
@@ -58,11 +62,15 @@ class MyServerHandler(http.server.BaseHTTPRequestHandler):
         return self.perform_requests('GET', url=self.path)
 
     def do_POST(self):
-        post_args = json.loads(self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8'))
+        headers = self.headers['Content-Length']
+        raw_body = self.rfile.read(int(headers)).decode('utf-8')
+        post_args = json.loads(raw_body)
         return self.perform_requests('POST', url=self.path, args=post_args)
 
     def do_PUT(self):
-        post_args = json.loads(self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8'))
+        headers = self.headers['Content-Length']
+        raw_body = self.rfile.read(int(headers)).decode('utf-8')
+        post_args = json.loads(raw_body)
         return self.perform_requests('PUT', url=self.path, args=post_args)
 
     def do_DELETE(self):
