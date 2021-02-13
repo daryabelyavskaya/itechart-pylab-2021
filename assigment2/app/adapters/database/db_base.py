@@ -8,11 +8,11 @@ class AbstractDB(ABC):
         pass
 
     @abstractmethod
-    def get_cursor_post(self, args):
+    def get_post_info(self, args):
         pass
 
     @abstractmethod
-    def get_db_data(self):
+    def get_posts_data(self):
         pass
 
     @abstractmethod

@@ -6,8 +6,8 @@ from decouple import config
 
 
 class Backend(Enum):
-    MONGODB = 1
-    POSTGRESQL = 2
+    mongodb = 1
+    postgresql = 2
 
 
 converters = {

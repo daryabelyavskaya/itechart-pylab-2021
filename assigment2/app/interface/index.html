@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>Little Project</title>
+    <link rel="stylesheet" href="index.css">
+
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<h1>Reddit posts</h1>
+<button id="showposts" class="btn red">All posts</button>
+<div id="widgets"></div>
+<script type="text/babel">
+    let firstList = [];
+    const url="http://localhost:8087/posts/";
+    const secondList = ["post category", "date", "number of votes"];
+    const StyledWrapper = {
+        display: "flex",
+        justifyContent: "space-around",
+        flexDirection: "column",
+    }
+    function getElements(e){
+        var req = new XMLHttpRequest();
+        req.open('GET', url,true );
+        req.send();
+        req.onreadystatechange = function() {
+            if(req.readyState!=4){
+                return
+            }
+            firstList=JSON.parse(req.responseText);
+        }   
+    }
+    var sendButton= document.getElementById("showposts") ;
+    sendButton.addEventListener("click", getElements);
+    const Container = () => {
+        return (
+            <div className="container">
+                <table >
+                    <thead>
+                        <tr>
+                            <th>POST URL</th>
+                            <th>USERNAME</th>
+                            <th>USER KARMA</th>
+                            <th>USER CAKE DAY</th>
+                            <th>POST KARMA</th>
+                            <th>COMMENTS KARMA</th>
+                            <th>POST DATE</th>
+                            <th>NUMBER OF COMMENTS</th>
+                            <th>NUMBER OF VOTES</th>
+                            <th>POST CATEGORY</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    { 
+                        firstList.map((item) =>
+                            <tr key={item.uniqueId}>
+                                <td>{item.postUrl}</td>
+                                <td>{item.username}</td>
+                                <td>{item.userKarma}</td>
+                                <td>{item.userCakeDay}</td>
+                                <td>{item.postKarma}</td>
+                                <td>{item.commentsKarma}</td>
+                                <td>{item.postDate}</td>
+                                <td>{item.numberOfComents}</td>
+                                <td>{item.numberOfVotes}</td>
+                                <td>{item.postCategory}</td>
+                            </tr>
+                        )
+                        }
+                </tbody>
+                </table>
+            </div>
+        )
+    }
+    const Button = ({onClick}) => {
+        return (
+            <button onClick={onClick}>
+                <div className="btn red">
+                    Choose filter
+                </div>
+            </button>
+        )
+    }
+    
+    const Wrapper = () => (
+        <div style={StyledWrapper}>
+            <Button 
+                onClick={()=>console.log('tsk')} 
+                />
+            <Container/>
+        </div>
+    )
+
+    ReactDOM.render(
+        <Wrapper/>,
+        document.getElementById('widgets')
+    );
+</script>
+</body>
+</html>

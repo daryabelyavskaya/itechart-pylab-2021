@@ -2,6 +2,7 @@ import http.server
 import json
 import re
 from collections import namedtuple
+from urllib.parse import urlparse
 
 from adapters.database.mongo_db.mongoDB import MongoDB
 from adapters.database.postgres_db.postgres import PostgresqlDB
@@ -37,12 +38,17 @@ class MyServerHandler(http.server.BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def end_headers(self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        http.server.BaseHTTPRequestHandler.end_headers(self)
+
     def send_headers(self, response_status, response_content):
         self.send_response(response_status)
         self.send_header("Content-type", response_content)
         self.end_headers()
 
-    def perform_requests(self, method, url=None, args=None):
+
+    def perform_requests(self, method, url=None, args=None, query=None):
         try:
             func_name = find_matches(URL_DICT, url)[method]
         except KeyError:
@@ -50,16 +56,24 @@ class MyServerHandler(http.server.BaseHTTPRequestHandler):
             return
         config = DBConfig()
         url_view = URLView(
-            DATABASE[str(config.configs().database)[8:].lower()],
+            DATABASE[str(config.configs().database)[8:]],
             config.configs()
         )
         func = getattr(url_view, func_name)
-        response = func(url=url, args=args)
+        response = func(url=url, args=args, query=query)
         self.send_headers(response.response, response.ContentType)
-        self.wfile.write(json.dumps(response.data).encode())
+        self.wfile.write(json.dumps(response.data, default=str).encode())
 
     def do_GET(self):
-        return self.perform_requests('GET', url=self.path)
+        query = urlparse(self.path).query
+        query_components = {}
+        if len(query) > 1:
+            query_components = dict(qc.split("=") for qc in query.split("&"))
+            self.path = self.path[:self.path.find("?")]
+        return self.perform_requests(
+            'GET',
+            url=self.path,
+            query=query_components)
 
     def do_POST(self):
         headers = self.headers['Content-Length']
@@ -79,5 +93,5 @@ class MyServerHandler(http.server.BaseHTTPRequestHandler):
 
 PORT = 8087
 server_address = ('localhost', PORT)
-server = http.server.HTTPServer(server_address, MyServerHandler)
+server = http.server.HTTPServer(server_address, MyServerHandler,)
 server.serve_forever()

@@ -1,0 +1,48 @@
+body {
+    background-color: #ddfbfb;
+    font-size: xxx-large;
+}
+
+h1 {
+    text-align: left;
+    font-size: xx-large;
+
+}
+.container{
+    
+    background-color: #fde6b3;
+    width: 60%;
+    margin: 10px;
+    padding: 10px;
+    border: px solid black;
+    font-size: small;
+}
+   
+button.btn{
+    margin-right: 10px;
+    padding: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+    font-size: .65em;
+    color:#fff;
+}
+
+.btn.light{
+    background-color: #4eafc9;
+    border: 2px solid #2a89a2;
+}
+   
+.btn.red{
+    background-color: #dda66d;
+    border: 2px solid #b6821a;
+}
+   
+.btn.light:hover{
+    background-color: #2a89a2;
+    border: 2px solid #1d6f85;
+}
+   
+.btn.red:hover{
+    background-color: #b6821a;
+    border: 2px solid #946912;
+}

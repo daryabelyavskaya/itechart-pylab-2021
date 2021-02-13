@@ -4,6 +4,7 @@ import psycopg2
 from adapters.database.db_base import AbstractDB
 
 from .db_requests import (
+    GET_DATA,
     GET_POST,
     INSERT_USER,
     INSERT_POST,
@@ -11,9 +12,33 @@ from .db_requests import (
     UPDATE_USER,
     UPDATE_POST,
     DELETE_POST,
-    DELETE_USER,
-    GET_DATA
+    DELETE_USER
 )
+
+
+def postgres_add_filter(query, request):
+    s = ''
+    f = False
+    if query.get('postCategory'):
+        f = True
+        s += f"postCategory='{query['postCategory']}' AND "
+    if query.get('numberOfComments_min'):
+        f = True
+        s += f"numberOfComments>='{query['numberOfComments_min']}' AND "
+    if query.get('numberOfComments_max'):
+        f = True
+        s += f"numberOfComments<='{query['numberOfComments_max']}' AND "
+    if query.get('postDate_min'):
+        f = True
+        s += f"postDate >='{query['postDate_min']}' AND "
+    if query.get('postDate_max'):
+        f = True
+        s += f"postDate <='{query['postDate_max']}' AND "
+    if f:
+        s = "WHERE " + s[:-4] + ';'
+    if query.get('limit'):
+        s = s[:-1] + f"LIMIT {query['limit']} OFFSET {query['offset']}"
+    return request[:-1] + s
 
 
 def get_time():
@@ -32,9 +57,9 @@ class PostgresqlDB(AbstractDB):
                                 password=self.config.password)
 
     @staticmethod
-    def load_to_json(cursor_data):
-        if cursor_data is None:
-            return {}
+    def load_data_to_json(cursor_data):
+        if cursor_data == [None]:
+            return [{}]
         data = []
         for _ in cursor_data:
             data.append({
@@ -52,22 +77,23 @@ class PostgresqlDB(AbstractDB):
             })
         return data
 
-    def get_cursor_post(self, args):
+    def get_post_info(self, args):
         connection = self.connect()
         connection_cursor = self.get_connection_cursor(connection)
         connection_cursor.execute(GET_POST, (args,))
         cursor_data = connection_cursor.fetchone()
-        data = self.load_data_to_json(cursor_data)
+        data = self.load_data_to_json([cursor_data])
         connection_cursor.close()
         connection.close()
         return data
 
-    def get_db_data(self):
+    def get_posts_data(self, query=None):
+        db_request = postgres_add_filter(query, GET_DATA)
         connection = self.connect()
         connection_cursor = self.get_connection_cursor(connection)
-        connection_cursor.execute(GET_DATA)
+        connection_cursor.execute(db_request)
         cursor_data = connection_cursor.fetchall()
-        data = self.load_to_json(cursor_data)
+        data = self.load_data_to_json(cursor_data)
         connection_cursor.close()
         connection.close()
         return data
@@ -135,7 +161,7 @@ class PostgresqlDB(AbstractDB):
         connection = self.connect()
         self.delete_user(
             connection,
-            self.get_user_id(connection, args['username'])
+            self.get_user_id(connection, args)
         )
         connection_cursor = self.get_connection_cursor(connection)
         connection_cursor.execute(DELETE_POST, (args,))

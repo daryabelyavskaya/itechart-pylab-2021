@@ -21,7 +21,7 @@ def load_page_data(parser, link, limit):
     logger_page.logger_info_message(f'get page link {link}')
     time.sleep(1)
     offset = 0
-    while len(posts) < 2:
+    while len(posts) < 5:
         elements = parser.find_elements_by_css_selector(
             ElementsIdConstants.POST_TAG_CSS_SELECTOR
         )
@@ -34,7 +34,7 @@ def load_page_data(parser, link, limit):
         logger_page.logger_info_message('find all users and their links')
         usernames = [users_links[i][28:-1] for i in range(len(users_links))]
         for el in range(offset, len(elements_links) - 1):
-            if len(posts) == 2:
+            if len(posts) == 5:
                 break
             user = users_links[el]
             post_page = req.get(elements_links[el], headers=HEADERS)
@@ -47,15 +47,18 @@ def load_page_data(parser, link, limit):
                 'user data received')
             logger_page.logger_info_message('post data received')
             post_karma, comment_karma = get_tooltip(soup_user, parser)
-            reddit_post = {
-                **post_data(soup_post),
-                **user_page_data(soup_user),
-                'postUrl': elements_links[el],
-                'username': usernames[el],
-                'postKarma': post_karma,
-                'commentKarma': comment_karma,
-                'uniqueId': str(uuid1.uuid1())
-            }
+            try:
+                reddit_post = {
+                    **post_data(soup_post),
+                    **user_page_data(soup_user),
+                    'postUrl': elements_links[el],
+                    'username': usernames[el],
+                    'postKarma': post_karma,
+                    'commentKarma': comment_karma,
+                    'uniqueId': str(uuid1.uuid1())
+                }
+            except Exception:
+                continue
             posts.append(reddit_post)
             logger_page.logger_info_message(f'the link #{el + 1} are valid')
         parser.scroll()
@@ -67,7 +70,6 @@ def load_page_data(parser, link, limit):
 def get_text(soup_element):
     if soup_element:
         return soup_element.text
-    return ''
 
 
 def get_user_day(day):
@@ -83,6 +85,8 @@ def user_page_data(soup):
         'span',
         id=ElementsIdConstants.USER_CAKE_DAY_TAG_ID
     ))
+    if user_day is None or user_karma is None:
+        raise Exception("Ivalid data")
     return {
         'userKarma': int(
             ''.join(map(str, user_karma))),
@@ -114,6 +118,8 @@ def post_data(soup):
         'span',
         class_=ElementsIdConstants.NUMBER_OF_COMMENTS_TAG_CLASS)
     )
+    if votes_number is None or post is None or comments is None:
+        raise Exception("Ivalid data")
     return {
         'numberOfVotes': reformat(votes_number),
         'postDate': get_data(post),
