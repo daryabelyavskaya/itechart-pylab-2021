@@ -23,6 +23,8 @@ URL_DICT = {
     }
 }
 
+def get_url(requestline):
+    char_find=requestline.find('/')
 
 def find_matches(d, item):
     for k in d.keys():
@@ -47,7 +49,6 @@ class MyServerHandler(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-type", response_content)
         self.end_headers()
 
-
     def perform_requests(self, method, url=None, args=None, query=None):
         try:
             func_name = find_matches(URL_DICT, url)[method]
@@ -70,6 +71,7 @@ class MyServerHandler(http.server.BaseHTTPRequestHandler):
         if len(query) > 1:
             query_components = dict(qc.split("=") for qc in query.split("&"))
             self.path = self.path[:self.path.find("?")]
+        print(self.path)
         return self.perform_requests(
             'GET',
             url=self.path,

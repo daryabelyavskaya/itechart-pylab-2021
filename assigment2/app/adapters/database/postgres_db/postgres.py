@@ -3,42 +3,33 @@ from datetime import datetime
 import psycopg2
 from adapters.database.db_base import AbstractDB
 
-from .db_requests import (
-    GET_DATA,
-    GET_POST,
-    INSERT_USER,
-    INSERT_POST,
-    GET_USER_ID,
-    UPDATE_USER,
-    UPDATE_POST,
-    DELETE_POST,
-    DELETE_USER
-)
+from .db_requests import SqlStatement
 
 
-def postgres_add_filter(query, request):
-    s = ''
-    f = False
-    if query.get('postCategory'):
-        f = True
-        s += f"postCategory='{query['postCategory']}' AND "
-    if query.get('numberOfComments_min'):
-        f = True
-        s += f"numberOfComments>='{query['numberOfComments_min']}' AND "
-    if query.get('numberOfComments_max'):
-        f = True
-        s += f"numberOfComments<='{query['numberOfComments_max']}' AND "
-    if query.get('postDate_min'):
-        f = True
-        s += f"postDate >='{query['postDate_min']}' AND "
-    if query.get('postDate_max'):
-        f = True
-        s += f"postDate <='{query['postDate_max']}' AND "
-    if f:
-        s = "WHERE " + s[:-4] + ';'
-    if query.get('limit'):
-        s = s[:-1] + f"LIMIT {query['limit']} OFFSET {query['offset']}"
-    return request[:-1] + s
+def reformat_date(query_params):
+    return datetime.strptime(query_params, '%Y-%m-%d')
+
+
+def generate_filter(query_params):
+    sql_query = ''
+    sql_statements = []
+    if query_params.get('category'):
+        sql_statements.append(f"postCategory='{query_params['category']}'")
+    if query_params.get('votes_min'):
+        sql_statements.append(f"numberOfvotes>={query_params['votes_min']}")
+    if query_params.get('votes_max'):
+        sql_statements.append(f"numberOfvotes<={query_params['votes_max']}")
+    if query_params.get('date_min'):
+        sql_statements.append(f"postDate >={reformat_date(query_params['date_min'])}")
+    if query_params.get('date_max'):
+        sql_statements.append(f"postDate <={reformat_date(query_params['date_max'])}")
+    if sql_statements:
+        sql_query += "WHERE "
+        sql_query += ' AND '.join(sql_statements)
+    if query_params.get('limit'):
+        sql_query += f" LIMIT {query_params['limit']} OFFSET {query_params['offset']}"
+    sql_query += ";"
+    return sql_query
 
 
 def get_time():
@@ -80,7 +71,7 @@ class PostgresqlDB(AbstractDB):
     def get_post_info(self, args):
         connection = self.connect()
         connection_cursor = self.get_connection_cursor(connection)
-        connection_cursor.execute(GET_POST, (args,))
+        connection_cursor.execute(SqlStatement.GET_POST, (args,))
         cursor_data = connection_cursor.fetchone()
         data = self.load_data_to_json([cursor_data])
         connection_cursor.close()
@@ -88,7 +79,7 @@ class PostgresqlDB(AbstractDB):
         return data
 
     def get_posts_data(self, query=None):
-        db_request = postgres_add_filter(query, GET_DATA)
+        db_request = SqlStatement.GET_DATA[:-1] + generate_filter(query)
         connection = self.connect()
         connection_cursor = self.get_connection_cursor(connection)
         connection_cursor.execute(db_request)
@@ -102,16 +93,9 @@ class PostgresqlDB(AbstractDB):
     def get_connection_cursor(connection):
         return connection.cursor()
 
-    def check_user(self, connection, username):
-        connection_cursor = self.get_connection_cursor(connection)
-        connection_cursor.execute(GET_USER_ID, (username,))
-        check = connection_cursor.fetchone()
-        connection_cursor.close()
-        return check
-
     def get_user_id(self, connection, args):
         connection_cursor = self.get_connection_cursor(connection)
-        connection_cursor.execute(GET_USER_ID, (args,))
+        connection_cursor.execute(SqlStatement.GET_USER_ID, (args,))
         user_id = connection_cursor.fetchone()
         connection_cursor.close()
         if user_id is not None:
@@ -121,7 +105,7 @@ class PostgresqlDB(AbstractDB):
     def insert_user(self, connection, args):
         connection_cursor = self.get_connection_cursor(connection)
         connection_cursor.execute(
-            INSERT_USER,
+            SqlStatement.INSERT_USER,
             (
                 args['username'],
                 args['userKarma'],
@@ -133,20 +117,20 @@ class PostgresqlDB(AbstractDB):
 
     def insert_post(self, args, ):
         connection = self.connect()
-        check = self.check_user(connection, args['username'])
-        if check is None:
-            self.insert_user(connection, args)
         user_id = self.get_user_id(connection, args['username'])
+        if not user_id:
+            self.insert_user(connection, args)
+            user_id = self.get_user_id(connection, args['username'])
         connection_cursor = self.get_connection_cursor(connection)
         connection_cursor.execute(
-            INSERT_POST,
+            SqlStatement.INSERT_POST,
             (
                 args['uniqueId'],
                 args['postUrl'],
                 args["postKarma"],
                 args["commentKarma"],
                 datetime.strptime(args['postDate'], '%Y-%m-%d'),
-                args['numberOfComments'],
+                args['numberOfVotes'],
                 args['numberOfVotes'],
                 args['postCategory'],
                 user_id,
@@ -164,14 +148,14 @@ class PostgresqlDB(AbstractDB):
             self.get_user_id(connection, args)
         )
         connection_cursor = self.get_connection_cursor(connection)
-        connection_cursor.execute(DELETE_POST, (args,))
+        connection_cursor.execute(SqlStatement.DELETE_POST, (args,))
         connection.commit()
         connection_cursor.close()
         connection.close()
 
     def delete_user(self, connection, args):
         connection_cursor = self.get_connection_cursor(connection)
-        connection_cursor.execute(DELETE_USER, (args,))
+        connection_cursor.execute(SqlStatement.DELETE_USER, (args,))
         connection.commit()
         connection_cursor.close()
 
@@ -179,7 +163,7 @@ class PostgresqlDB(AbstractDB):
         connection = self.connect()
         connection_cursor = self.get_connection_cursor(connection)
         connection_cursor.execute(
-            UPDATE_POST, (
+            SqlStatement.UPDATE_POST, (
                 post_id,
                 args['postUrl'],
                 args["postKarma"],
@@ -198,7 +182,7 @@ class PostgresqlDB(AbstractDB):
     def update_user(self, connection, args, post_id):
         connection_cursor = self.get_connection_cursor(connection)
         connection_cursor.execute(
-            UPDATE_USER,
+            SqlStatement.UPDATE_USER,
             (args['username'],
              args['userKarma'],
              args['userCakeDay'],

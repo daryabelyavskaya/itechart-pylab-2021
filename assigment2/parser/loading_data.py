@@ -21,7 +21,7 @@ def load_page_data(parser, link, limit):
     logger_page.logger_info_message(f'get page link {link}')
     time.sleep(1)
     offset = 0
-    while len(posts) < 5:
+    while len(posts) < 30:
         elements = parser.find_elements_by_css_selector(
             ElementsIdConstants.POST_TAG_CSS_SELECTOR
         )
@@ -34,7 +34,7 @@ def load_page_data(parser, link, limit):
         logger_page.logger_info_message('find all users and their links')
         usernames = [users_links[i][28:-1] for i in range(len(users_links))]
         for el in range(offset, len(elements_links) - 1):
-            if len(posts) == 5:
+            if len(posts) == 30:
                 break
             user = users_links[el]
             post_page = req.get(elements_links[el], headers=HEADERS)
@@ -126,7 +126,7 @@ def post_data(soup):
         'postCategory': get_text(soup.find(
             'span',
             class_=ElementsIdConstants.POST_CATEGORY_TAG_CLASS
-        )),
+        ))[2:],
         'numberOfComments': reformat(comments) * 100
     }
 

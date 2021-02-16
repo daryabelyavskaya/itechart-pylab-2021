@@ -8,36 +8,34 @@ def get_time():
     return datetime.today().strftime("%Y-%m-%d")
 
 
-def get_date(query):
-    d = {}
-    if query.get("postDate_min"):
-        d['postDate'] = {"$gte": query['postDate_min']}
-        if query.get("postDate_max"):
-            d['postDate']['$lte'] = query['postDate_max']
-        return d
-    if query.get("postDate_max"):
-        d['postDate'] = {'postDate': {"$lte": query['postDate_max']}}
-        return d
-    return {}
+def process_min_max_values(query, field_label):
+    number_of_votes_min_value = query.get(f"votes_min")
+    number_of_votes_max_value = query.get("votes_max")
+
+    if not number_of_votes_min_value and not number_of_votes_max_value:
+        return {}
+
+    d = {'numberOfVotes': {}}
+    if number_of_votes_min_value:
+        d['numberOfVotes']["$gte"] = query['votes_min']
+    if number_of_votes_max_value:
+        d['numberOfVotes']["$lte"] = query['votes_max']
+
+    return d
 
 
-def get_comments(query):
-    d = {}
-    if query.get("numberOfComments_min"):
-        d['numberOfComments'] = {"$gte": query['numberOfComments_min']}
-        if query.get("numberOfComments_max"):
-            d['numberOfComments']['$lte'] = query['numberOfComments_max']
-        return d
-    if query.get("numberOfComments_max"):
-        d['numberOfComments'] = {'numberOfComments': {"$lte": query['numberOfComments_max']}}
-        return d
+def get_post_category_query(query):
+    if query.get("category"):
+        return {"postCategory": query["postCategory"]}
     return {}
 
 
 def get_query_attrs(query):
-    if query.get("postCategory"):
-        return {**get_date(query), **get_comments(query), "postCategory": query["postCategory"]}
-    return {**get_date(query), **get_comments(query)}
+    query_dict = {
+        **get_post_category_query(query),
+        **process_min_max_values(query),
+    }
+    return query_dict
 
 
 class MongoDB(AbstractDB):
@@ -58,7 +56,7 @@ class MongoDB(AbstractDB):
 
     def get_posts_data(self, query=None):
         query_attr = get_query_attrs(query)
-        if query.get('limit'):
+        if query.get('limit') and query.get("offset"):
             return list(self.db.posts.find(query_attr, {'_id': 0})
                         .limit(int(query['limit']))
                         .skip(int(query['offset'])))

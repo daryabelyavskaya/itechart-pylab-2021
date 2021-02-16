@@ -26,7 +26,7 @@ class URLView:
 
     def add_post(self, url=None, args=None, query=None):
         cursor_data = self.database.get_post_info(args['uniqueId'])
-        if len(cursor_data) > 0 is not None:
+        if cursor_data[0].get('uniqueId'):
             return ResponseStatus(400, 'application/json', {})
         self.database.insert_post(args)
         return ResponseStatus(
